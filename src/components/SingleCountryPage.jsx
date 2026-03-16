@@ -1,26 +1,67 @@
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { useTheme } from "../context/useTheme";
 import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
 import Navbar from "./Navbar";
 import { Link } from "react-router-dom";
 // import flag from "../assets/flag.jpg";
-import { countriesData } from "../data";
-import { useTheme } from "../context/useTheme";
+// import { countriesData } from "../data";
+import axiosInstance from "../axiosInstance";
 
 const SingleCountryPage = () => {
+  const [country, setCountry] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const { mode } = useTheme();
   const { name } = useParams();
 
-  const country = countriesData.find(
-    (country) => country.name.toLocaleLowerCase() === name.toLocaleLowerCase(),
-  );
+  useEffect(() => {
+    axiosInstance
+      .get(
+        `/name/${name}?fields=name,capital,population,region,subregion,flags,tld,currencies,languages,borders`,
+      )
+      .then((res) => {
+        setCountry(res.data[0]);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [name]);
 
-  if (!country) {
+  if (loading)
+    return (
+      <p className={`${mode ? "text-black" : "text-white"} text-center mt-10`}>
+        Loading...
+      </p>
+    );
+  if (error)
+    return <p className={`text-red-500 text-center mt-10`}>Error: {error}</p>;
+  if (!country)
     return (
       <p className={`${mode ? "text-black" : "text-white"} text-center mt-10`}>
         Country not found
       </p>
     );
-  }
+
+  const nativeName = country.name.nativeName
+    ? Object.values(country.name.nativeName)[0].common
+    : country.name.common;
+
+  const currencies = country.currencies
+    ? Object.values(country.currencies)
+        .map((currency) => currency.name)
+        .join(",")
+    : "N/A";
+
+  const languages = country.languages
+    ? Object.values(country.languages).join(", ")
+    : "N/A";
+
+  const topLevelDomain = country.tld ? country.tld.join(",") : "N/A";
+
+  // const country = countriesData.find(
+  //   (country) => country.name.toLocaleLowerCase() === name.toLocaleLowerCase(),
+  // );
 
   return (
     <div
@@ -42,25 +83,26 @@ const SingleCountryPage = () => {
           <div className="basis-[48%]">
             <img
               src={country.flags.svg}
-              alt="Afghanistan"
+              alt={country.flags.alt || country.name.common}
               className="w-full h-full object-cover"
             />
           </div>
           <div className="h-100 basis-[48%] flex flex-col justify-center">
-            <div>
-              <h2 className="text-2xl font-bold mb-10">{country.name}</h2>
-              <div className="flex gap-10 items-center">
-                <div>
+            <div className="flex flex-col lg:flex-row lg:gap-0 lg:items-center justify-between">
+              <div className="basis-[55%] mt-10 lg:mt-0">
+                <h2 className="text-2xl font-bold">{country.name.common}</h2>
+
+                <div className="mt-5 flex flex-col gap-4 lg:gap-2">
                   <p
                     className={`${mode ? "text-gray-900" : "text-gray-300"} flex gap-2 text-base`}
                   >
-                    <span className="font-medium">Native Name:</span>
-                    <span className="font-normal">{country.nativeName}</span>
+                    <span className="font-bold">Native Name:</span>
+                    <span className="font-normal">{nativeName}</span>
                   </p>
                   <p
                     className={`${mode ? "text-gray-900" : "text-gray-300"} flex gap-2 text-base`}
                   >
-                    <span className="font-medium">Population:</span>
+                    <span className="font-bold">Population:</span>
                     <span className="font-normal">
                       {country.population.toLocaleString()}
                     </span>
@@ -68,57 +110,49 @@ const SingleCountryPage = () => {
                   <p
                     className={`${mode ? "text-gray-900" : "text-gray-300"} flex gap-2 text-base`}
                   >
-                    <span className="font-medium">Region:</span>
+                    <span className="font-bold">Region:</span>
                     <span className="font-normal">{country.region}</span>
                   </p>
                   <p
                     className={`${mode ? "text-gray-900" : "text-gray-300"} flex gap-2 text-base`}
                   >
-                    <span className="font-medium">Sub Region:</span>
+                    <span className="font-bold">Sub Region:</span>
                     <span className="font-normal">{country.subregion}</span>
                   </p>
                   <p
                     className={`${mode ? "text-gray-900" : "text-gray-300"} flex gap-2 text-base`}
                   >
-                    <span className="font-medium">Captical:</span>
-                    <span className="font-normal">{country.capital}</span>
-                  </p>
-                </div>
-                <div>
-                  <p
-                    className={`${mode ? "text-gray-900" : "text-gray-300"} flex gap-2 text-base`}
-                  >
-                    <span className="font-medium">Top Level Domain:</span>
+                    <span className="font-bold">Captical:</span>
                     <span className="font-normal">
-                      {country.topLevelDomain}
-                    </span>
-                  </p>
-                  <p
-                    className={`${mode ? "text-gray-900" : "text-gray-300"} flex gap-2 text-base`}
-                  >
-                    <span className="font-medium">Currencies:</span>
-                    <span className="font-normal">
-                      {country.currencies
-                        .map((currency) => currency.name)
-                        .join(", ")}
-                    </span>
-                  </p>
-                  <p
-                    className={`${mode ? "text-gray-900" : "text-gray-300"} flex gap-2 text-base`}
-                  >
-                    <span className="font-medium">Languages:</span>
-                    <span className="font-normal">
-                      {country.languages
-                        .map((language) => language.name)
-                        .join(", ")}
+                      {country.capital ? country.capital[0] : "N/A"}
                     </span>
                   </p>
                 </div>
               </div>
+              <div className="basis-[42%] flex flex-col gap-4 lg:gap-2 mt-10 lg:mt-0">
+                <p
+                  className={`${mode ? "text-gray-900" : "text-gray-300"} flex gap-2 text-base`}
+                >
+                  <span className="font-bold">Top Level Domain:</span>
+                  <span className="font-normal">{topLevelDomain}</span>
+                </p>
+                <p
+                  className={`${mode ? "text-gray-900" : "text-gray-300"} flex gap-2 text-base`}
+                >
+                  <span className="font-bold">Currencies:</span>
+                  <span className="font-normal">{currencies}</span>
+                </p>
+                <p
+                  className={`${mode ? "text-gray-900" : "text-gray-300"} flex gap-2 text-base`}
+                >
+                  <span className="font-bold">Languages:</span>
+                  <span className="font-normal">{languages}</span>
+                </p>
+              </div>
             </div>
-            <div className="mt-10 flex gap-5 items-center">
-              <p className="font-medium text-base">Border Countries:</p>
-              <div className="flex flex-wrap gap-5">
+            <div className="mt-10 lg:flex lg:gap-5 lg:items-center">
+              <p className="font-bold text-base">Border Countries:</p>
+              <div className="mt-5 lg:mt-0 flex flex-wrap gap-5">
                 {!country.borders || country.borders.length === 0 ? (
                   <span
                     className={`${mode ? "bg-gray-100 text-gray-900" : "bg-gray-800 text-gray-300"} px-3 py-1 border border-gray-200 rounded-md text-base`}

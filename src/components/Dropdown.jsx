@@ -4,13 +4,17 @@ import { IoIosArrowDown } from "react-icons/io";
 
 const regions = ["Africa", "Americas", "Asia", "Europe", "Oceania"];
 
-const Dropdown = () => {
+const Dropdown = ({ selectedRegion, onRegionChange }) => {
   const { mode } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedRegion, setSelectedRegion] = useState("Filter by Region");
+  // const [selectedRegion, setSelectedRegion] = useState("Filter by Region");
 
   const handleSelect = (region) => {
-    setSelectedRegion(region);
+    if (region === selectedRegion) {
+      onRegionChange("");
+    } else {
+      onRegionChange(region);
+    }
     setIsOpen(false);
   };
 
@@ -21,12 +25,12 @@ const Dropdown = () => {
       )}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`${mode ? "bg-[#ffffff] border-gray-300" : "bg-[#2b3945] border-gray-500"} px-4 py-2 rounded-md shadow-sm flex items-center justify-between w-full border`}
+        className={`${mode ? "bg-[#ffffff] border-gray-100" : "bg-[#2b3945] border-gray-600"} px-4 py-2 rounded-md shadow-sm flex items-center justify-between w-full border`}
       >
         <span
-          className={`${mode ? "text-[#111517]" : "text-[#ffffff]"} font-bold`}
+          className={`${mode ? "text-[#111517]" : "text-[#ffffff]"} font-bold text-sm lg:text-base`}
         >
-          {selectedRegion}
+          {selectedRegion || "Filter by Region"}
         </span>
         <IoIosArrowDown
           className={`${mode ? "text-[#111517]" : "text-[#ffffff]"} w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
@@ -34,7 +38,7 @@ const Dropdown = () => {
       </button>
       {isOpen && (
         <ul
-          className={`${mode ? "bg-[#ffffff]" : "bg-[#2b3945]"} absolute z-20 mt-2 rounded-md shadow-lg w-full border overflow-hidden`}
+          className={`${mode ? "bg-[#ffffff] border-gray-50" : "bg-[#2b3945] border-transparent"} absolute z-20 mt-2 rounded-md shadow-lg w-full border  overflow-hidden`}
         >
           {regions.map((region) => (
             <li
