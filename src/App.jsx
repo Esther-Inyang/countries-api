@@ -1,7 +1,5 @@
-import "./App.css";
 import { Routes, Route } from "react-router-dom";
 import SingleCountryPage from "./components/SingleCountryPage";
-import Card from "./components/Card";
 import Home from "./components/Home";
 
 const App = () => {
